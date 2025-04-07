@@ -23,13 +23,11 @@ void taylor_step(
     double y_new = *y;
 
     double h_pow = h;
-    double prev_factor = 1.0; // 0! = 1
     for (int i = 0; i < order; i++) {
         double factor = h_pow / tgamma(i + 2);  // 1/i!
-        x_new += factor * coeffs[i];
+        x_new += factor * coeffs[i]; //taylor of x(t)
         if(i<order-1){
-        y_new +=factor * coeffs[i+1]; // v = dx/dt, dv/dt = coeff[1
-
+        y_new +=factor * coeffs[i+1]; //taylor of y
         } 
         h_pow *= h;
     }
