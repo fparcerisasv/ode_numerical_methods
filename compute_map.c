@@ -33,9 +33,10 @@ void taylor_coeffs(double t, double x, double y, double *coeffs, int order) { //
 
 int main(int argc, char *argv[]) { //usage: ./compute_map <x_initial> <y_initial>
     
-    if (argc != 3) {
-        printf("Usage: %s <x_initial> <y_initial>\n", argv[0]);
-                return 1;
+    if (argc < 3 || argc > 4) {
+        printf("Usage: %s <x_initial> <y_initial> [s]\n", argv[0]);
+        printf("  s (optional): Save .dat file if provided\n");
+        return 1;
     }
     //GENEREATE FLOW FROM STARTING POINT
     /*
@@ -52,17 +53,19 @@ int main(int argc, char *argv[]) { //usage: ./compute_map <x_initial> <y_initial
     double x[2];
     x[0] = atof(argv[1]);
     x[1] = atof(argv[2]);
+    int save_data = (argc == 4) ? atoi(argv[3]) : 0; // Check if 's' is provided
     int n = 2;
    
 
     int order = 4; // Order of the Taylor method
     
 
-    int iterations = 100100; // total number of iterations
-    int plot_iterations = 10000; // number of iterations to plot
+    int iterations = 100000; // total number of iterations
+    int plot_iterations = 100000; // number of iterations to plot
     
     char dat_filename[100];
     char png_filename[100];
+    
     snprintf(dat_filename, sizeof(dat_filename), "outputs/ode_flow_%.2f_%.2f.dat", x[0], x[1]);
     snprintf(png_filename, sizeof(png_filename), "outputs/ode_flow_%.2f_%.2f.png", x[0], x[1]);
 
@@ -78,21 +81,30 @@ int main(int argc, char *argv[]) { //usage: ./compute_map <x_initial> <y_initial
         }
         taylor_step(&t, &x[0], &x[1], h, order, taylor_coeffs);
     }
-
+    fclose(gnuplot_file_taylor_large);
     //Plot with gnuplot
-    char gnuplot_commands[5][200];
-    snprintf(gnuplot_commands[0], sizeof(gnuplot_commands[0]), "set output \"%s\"", png_filename);
-    strcpy(gnuplot_commands[1], "set title \"Map\"");
-    strcpy(gnuplot_commands[2], "set xlabel \"x\"");
-    strcpy(gnuplot_commands[3], "set ylabel \"y\"");
-    snprintf(gnuplot_commands[4], sizeof(gnuplot_commands[4]), 
+    char gnuplot_commands[6][200];
+    snprintf(gnuplot_commands[0], sizeof(gnuplot_commands[0]), "set terminal pngcairo");
+    snprintf(gnuplot_commands[1], sizeof(gnuplot_commands[1]), "set output \"%s\"", png_filename);
+    strcpy(gnuplot_commands[2], "set title \"Map\"");
+    strcpy(gnuplot_commands[3], "set xlabel \"x\"");
+    strcpy(gnuplot_commands[4], "set ylabel \"y\"");
+    snprintf(gnuplot_commands[5], sizeof(gnuplot_commands[5]), 
              "plot \"%s\" using 1:2 with lines title \"phi(t)\"", dat_filename);
 
-    FILE *gnuplot_pipe = popen("gnuplot -persistent", "w");
-
-    for( int i=0; i<5; i++){
-        fprintf(gnuplot_pipe,"%s \n", gnuplot_commands[i]);
+    FILE *gnuplot_pipe = popen("gnuplot", "w");  // Removed -persistent
+    for(int i = 0; i < 6; i++) {
+        fprintf(gnuplot_pipe, "%s \n", gnuplot_commands[i]);
+        fflush(gnuplot_pipe);  // Flush after each command
     }
-    fclose(gnuplot_pipe);
+    
+    // Add small delay and explicit exit
+    fprintf(gnuplot_pipe, "exit\n");
+    fflush(gnuplot_pipe);
+    
+    pclose(gnuplot_pipe);
+    if (!save_data) {
+        remove(dat_filename); // Remove the .dat file if 's' is not provided
+    }
     return 0; 
 }
