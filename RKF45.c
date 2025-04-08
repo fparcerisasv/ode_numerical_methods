@@ -108,12 +108,11 @@ int rkf45(double *at, double *x, int n, double *ah, int sc, double tol, double *
             if (aer) *aer = err; // store estimated error 
 
             double hN = 0.9 * h * pow(tol / err, 0.2); // new stepsize
-            
             if(!sc ||(sc && err < tol)){ // stepsize control
                step_accepted = 1; // step accepted
                t += h; // update time
                 for (int i = 0; i < n; i++) {
-                     x[i] = x5[i]; // update position
+                     x[i] = x4[i]; // update position
                 }
             } else { // error too large, reduce step size
                 h = hN; // reduce step size

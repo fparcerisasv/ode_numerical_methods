@@ -53,7 +53,7 @@ int main(int argc, char *argv[]) { //usage: ./compute_map <x_initial> <y_initial
     double x[2];
     x[0] = atof(argv[1]);
     x[1] = atof(argv[2]);
-    int save_data = (argc == 4) ? atoi(argv[3]) : 0; // Check if 's' is provided
+    int save_data = (argc == 4 && argv[3][0] == 's'); // Check if 's' is provided
     int n = 2;
    
 
